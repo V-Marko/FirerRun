@@ -9,10 +9,12 @@ public class Bullet {
     private float speed;
     private Bitmap image;
     private float PlayerWidth = Player.width;
+    public static int width = 50;
+    public static int height = 20;
     public Bullet(float x, float y, Bitmap image) {
         this.x = x;
         this.y = y;
-        this.image = Bitmap.createScaledBitmap(image, 50, 20, false);
+        this.image = Bitmap.createScaledBitmap(image, width, height, false);
         this.speed = DEFAULT_SPEED;
     }
 

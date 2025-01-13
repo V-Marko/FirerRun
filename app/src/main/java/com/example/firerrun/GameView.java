@@ -15,15 +15,21 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private GameThread gameThread;
     private Player player;
+    private Life Life;
     private Animation animation;
     private Bitmap playerImage;
     private Paint textPaint;
+    private BadBox badBox;
+    private long lastCollisionTime = 0;
+    private final long collisionCooldown = 300;
+
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
         getHolder().addCallback(this);
         gameThread = new GameThread(getHolder(), this);
         player = new Player(context);
+        Life = new Life();
 
         playerImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.stand_1);
         playerImage = Bitmap.createScaledBitmap(playerImage, 100, 100, false);
@@ -34,6 +40,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         textPaint.setColor(Color.RED);
         textPaint.setTextSize(100);
         textPaint.setTextAlign(Paint.Align.CENTER);
+
+        badBox = new BadBox(500, 500, BitmapFactory.decodeResource(context.getResources(), R.drawable.bad_box));
+        animation = new Animation(player);
     }
 
     @Override
@@ -61,11 +70,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void update() {
         player.update();
+        badBox.update();
+
+        if (badBox.checkCollision(player)) {
+            long currentTime = System.currentTimeMillis();
+
+            if (currentTime - lastCollisionTime >= collisionCooldown) {
+                lastCollisionTime = currentTime;
+                Life.decreaseLife(20);
+            }
+        }
     }
+
 
     public void draw(Canvas canvas) {
         super.draw(canvas);
         player.draw(canvas);
+        badBox.draw(canvas);
+        Life.draw(canvas);
 
     }
 
@@ -74,7 +96,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             player.width = -player.width;
             player.headWidth = -player.headWidth;
             player.gunWidth = -player.gunWidth;
-
+            Bullet.width = -Bullet.width;
 
         }
 
@@ -95,6 +117,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             player.width = -player.width;
             player.headWidth = -player.headWidth;
             player.gunWidth = -player.gunWidth;
+            Bullet.width = -Bullet.width;
+
 
         }
         player.setMovingRight(true);

@@ -13,7 +13,7 @@ public class Player {
     private float x, y;
     private float speed = 10f;
     private boolean movingLeft, movingRight, jumping;
-    private boolean isIdle; // Новый флаг для проверки состояния "стояния"
+    private boolean isIdle;
     private float jumpSpeed = 15f;
     private float gravity = 1f;
 
@@ -37,7 +37,7 @@ public class Player {
 
     // Переменные для задержки анимации
     private long lastIdleTime = 0;
-    private static final long ANIMATION_DELAY = 300; // 300 миллисекунд для смены изображений
+    private static final long ANIMATION_DELAY = 300;
 
     // Список снарядов
     private List<Bullet> bullets;
@@ -165,5 +165,36 @@ public class Player {
 
     public Context getContext() {
         return context;
+    }
+
+    public float getX() {
+        return this.x;
+    }
+
+    public float getY() {
+        return this.y;
+    }
+
+    public int getWidth() {
+        return this.width;
+    }
+
+    public int getHeight() {
+        return this.height;
+    }
+
+
+    // Метод для уменьшения жизней
+    private int lives = 100;
+
+    public void decreaseLife(int amount) {
+        lives -= amount;
+        if (lives < 0) {
+            lives = 0;
+        }
+    }
+
+    public int getLives() {
+        return lives;
     }
 }
