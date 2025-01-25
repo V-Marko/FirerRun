@@ -7,42 +7,34 @@ import android.content.Context;
 import android.graphics.Rect;
 
 public class Block {
-    private float x;
-    private float y;  // Changed from static to instance variable
-    private float width;
-    private float height;
+    private float x, y;
+    private int width, height;
     private Bitmap image;
+    private Context context;
 
-    // Constructor with image
-    public Block(float x, float y, float width, float height, int imageResource, Context context) {
+    // Конструктор теперь принимает параметры для позиции и размеров блока
+    public Block(Context context, float x, float y, int width, int height, int imageResourceId) {
+        this.context = context;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
-        this.image = BitmapFactory.decodeResource(context.getResources(), imageResource);
-        this.image = Bitmap.createScaledBitmap(this.image, (int) width, (int) height, false);
+
+        // Загружаем изображение для блока
+        this.image = BitmapFactory.decodeResource(context.getResources(), imageResourceId);
+        this.image = Bitmap.createScaledBitmap(image, width, height, false);
     }
 
-    // Constructor without image
-    public Block(float x, float y, float width, float height) {
-        this.x = x;
-        this.y = y;
-        this.width = width;
-        this.height = height;
-        this.image = null; // No image provided, don't render image
-    }
-
-    // Draw the block
+    // Метод отрисовки блока на холсте
     public void draw(Canvas canvas) {
         if (image != null) {
             canvas.drawBitmap(image, x, y, null);
         } else {
-            // Draw a rectangle if there's no image
             canvas.drawRect(x, y, x + width, y + height, null);
         }
     }
 
-    // Collision detection with player
+    // Проверка столкновения блока с игроком
     public boolean checkCollisionBlockPlayer(Player player) {
         Rect playerRect = new Rect((int) player.getX(), (int) player.getY(),
                 (int) (player.getX() + player.getWidth()), (int) (player.getY() + player.getHeight()));
@@ -52,12 +44,18 @@ public class Block {
         return Rect.intersects(playerRect, blockRect);
     }
 
-    // Getters
+    // Проверка, стоит ли игрок на блоке
+    public boolean isOnBlock(Player player) {
+        return player.getX() + player.getWidth() > x && player.getX() < x + width &&
+                player.getY() + player.getHeight() >= y && player.getY() + player.getHeight() <= y + height;
+    }
+
+    // Геттеры
     public float getX() {
         return x;
     }
 
-    public float getY() {  // Made non-static
+    public float getY() {
         return y;
     }
 
@@ -67,12 +65,5 @@ public class Block {
 
     public float getHeight() {
         return height;
-    }
-
-    // Check if the player is standing on the block
-    public boolean isOnBlock(Player player) {
-        // Check if player is within the block's x and y range and is standing on top
-        return player.getX() + player.getWidth() > x && player.getX() < x + width &&
-                player.getY() + player.getHeight() >= y && player.getY() + player.getHeight() <= y + height;
     }
 }

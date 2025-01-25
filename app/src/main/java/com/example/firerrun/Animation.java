@@ -6,21 +6,22 @@ import android.os.Handler;
 
 public class Animation {
     private Player player;
-    private int walkIndex = 0;
-    private Bitmap[] walkFrames;
-    private Bitmap headImage;
-    private Bitmap gunImage;
-    private Handler handler = new Handler();
-    private int frameDuration = 100;
-    private boolean isAnimating = false;
+    private int walkIndex = 0; // Индекс текущего кадра анимации
+    private Bitmap[] walkFrames; // Массив кадров анимации
+    private Bitmap headImage; // Изображение головы
+    private Bitmap gunImage; // Изображение оружия
+    private Handler handler = new Handler(); // Handler для управления анимацией
+    private int frameDuration = 100; // Задержка между кадрами (в миллисекундах)
+    private boolean isAnimating = false; // Флаг, указывающий, активна ли анимация
 
     public Animation(Player player) {
         this.player = player;
-        loadWalkFrames();
-        loadHeadImage();
-        loadGunImage();
+        loadWalkFrames(); // Загружаем кадры анимации
+        loadHeadImage(); // Загружаем изображение головы
+        loadGunImage(); // Загружаем изображение оружия
     }
 
+    // Загрузка кадров анимации
     private void loadWalkFrames() {
         int[] frameResources = {
                 R.drawable.person_walk_1,
@@ -38,32 +39,39 @@ public class Animation {
         }
     }
 
+    // Загрузка изображения головы
     private void loadHeadImage() {
         headImage = BitmapFactory.decodeResource(player.getContext().getResources(), R.drawable.person_head);
     }
 
+    // Загрузка изображения оружия
     private void loadGunImage() {
         gunImage = BitmapFactory.decodeResource(player.getContext().getResources(), R.drawable.person_gun);
     }
 
+    // Метод для запуска анимации ходьбы
     public void startWalkingAnimation() {
         if (!isAnimating) {
             isAnimating = true;
-            handler.post(animationRunnable);
+            handler.post(animationRunnable); // Запускаем анимацию
         }
     }
 
+    // Метод для остановки анимации ходьбы
     public void stopWalkingAnimation() {
         isAnimating = false;
-        handler.removeCallbacks(animationRunnable);
+        handler.removeCallbacks(animationRunnable); // Останавливаем анимацию
     }
 
     private Runnable animationRunnable = new Runnable() {
         @Override
         public void run() {
             if (isAnimating) {
+                // Устанавливаем текущий кадр анимации
                 player.setPlayerImage(walkFrames[walkIndex], headImage, gunImage);
+                // Переходим к следующему кадру
                 walkIndex = (walkIndex + 1) % walkFrames.length;
+                // Повторяем через frameDuration миллисекунд
                 handler.postDelayed(this, frameDuration);
             }
         }

@@ -1,4 +1,3 @@
-
 package com.example.firerrun;
 
 import android.annotation.SuppressLint;
@@ -11,6 +10,7 @@ public class MainActivity extends Activity {
 
     private GameView gameView;
     private Button btnLeft, btnRight, btnJump, btnShoot;
+    private PlayerController playerController;
 
     @SuppressLint("ClickableViewAccessibility")
     @Override
@@ -24,14 +24,17 @@ public class MainActivity extends Activity {
         btnJump = findViewById(R.id.btnJump);
         btnShoot = findViewById(R.id.btnShoot);
 
+        // Инициализация контроллера
+        playerController = new PlayerController(gameView.getPlayer(), gameView);
 
+        // Обработка нажатий кнопок
         btnLeft.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    gameView.moveLeft();
+                    playerController.moveLeft();
                     break;
                 case MotionEvent.ACTION_UP:
-                    gameView.stopLeft();
+                    playerController.stopLeft();
                     break;
             }
             return true;
@@ -40,10 +43,10 @@ public class MainActivity extends Activity {
         btnRight.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    gameView.moveRight();
+                    playerController.moveRight();
                     break;
                 case MotionEvent.ACTION_UP:
-                    gameView.stopRight();
+                    playerController.stopRight();
                     break;
             }
             return true;
@@ -51,17 +54,16 @@ public class MainActivity extends Activity {
 
         btnJump.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                gameView.jump();
+                playerController.jump();
             }
             return true;
         });
 
         btnShoot.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                gameView.shoot();
+                playerController.shoot();
             }
             return true;
         });
-
     }
 }

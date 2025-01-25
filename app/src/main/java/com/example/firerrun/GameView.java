@@ -18,7 +18,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private Bitmap background;
     private GameThread gameThread;
     private Player player;
-    private Life life;  // Исправлено имя переменной
+    private Life life;
     private Animation animation;
     private Bitmap playerImage;
     private Paint textPaint;
@@ -28,58 +28,43 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private PlayerController playerController;
 
     private List<Block> blockList = new ArrayList<>();
-    private List<Bullet> bullets = new ArrayList<>();  // Список пуль
+    private List<Bullet> bullets = new ArrayList<>();
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         getHolder().addCallback(this);
 
-        // Инициализация игрока, жизни, фона, блоков
+        // Инициализация блоков
+        for (int[] blockData : BlocksList.Blocks) {
+            Block block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block);
+            blockList.add(block);
+        }
+
+        // Инициализация игрока и других объектов
         gameThread = new GameThread(getHolder(), this);
         player = new Player(context);
         life = new Life();
         playerImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.stand_1);
         playerImage = Bitmap.createScaledBitmap(playerImage, 100, 100, false);
-
         animation = new Animation(player);
         textPaint = new Paint();
         textPaint.setColor(Color.RED);
         textPaint.setTextSize(100);
         textPaint.setTextAlign(Paint.Align.CENTER);
-
         badBox = new BadBox(500, 500, BitmapFactory.decodeResource(context.getResources(), R.drawable.bad_box));
-        blockList = new ArrayList<>();
 
-        // Инициализация блоков
-        for (int[] blockData : BlocksList.Blocks) {
-            Block block = new Block(blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block, context);
-            blockList.add(block);
-        }
-
-        addTestBlocks();  // Добавляем тестовые блоки (если нужно)
-    }
-
-    // Метод для добавления тестовых блоков (если нужно)
-    public void addTestBlocks() {
-        // Пример добавления блоков
-//        blockList.add(new Block(200, 500, 100, 50, R.drawable.block, getContext()));
-//        blockList.add(new Block(400, 500, 100, 50, R.drawable.block, getContext()));
+        // Инициализация контроллера
+        playerController = new PlayerController(player, this);
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        // Получаем ширину и высоту экрана в методе surfaceCreated()
         int backgroundWidth = getWidth();
         int backgroundHeight = getHeight();
 
-        // Загружаем исходное изображение фона
         Bitmap originalBackground = BitmapFactory.decodeResource(getResources(), R.drawable.background);
-
-        // Масштабируем фоновое изображение до размеров экрана
         background = Bitmap.createScaledBitmap(originalBackground, backgroundWidth, backgroundHeight, true);
 
-        // Запускаем игровой поток
         gameThread.setRunning(true);
         gameThread.start();
     }
@@ -105,26 +90,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         // Обновление состояния пуль
         for (int i = bullets.size() - 1; i >= 0; i--) {
             Bullet bullet = bullets.get(i);
-            bullet.update();  // Обновляем положение пули
+            bullet.update();
 
-            // Удаляем пулю, если она вышла за пределы экрана
             if (bullet.getX() > getWidth() || bullet.getX() < 0) {
                 bullets.remove(i);
                 continue;
             }
 
-            // Проверка столкновения пули с badBox
             if (badBox.checkCollisionBullet(bullet)) {
-                bullets.remove(i);  // Удаляем пулю после попадания
-                badBox.die();  // Уничтожаем badBox
+                bullets.remove(i);
+                badBox.die();
                 Log.i("info", "Bullet hit bad_box and bad_box is destroyed");
             }
 
-            // Проверка столкновений пули с блоками
             for (Block block : blockList) {
                 if (bullet.checkCollision(block)) {
                     bullets.remove(i);
-                    blockList.remove(block);  // Удаляем блок
+                    blockList.remove(block);
                     Log.i("info", "Bullet hit block and block is destroyed");
                     break;
                 }
@@ -136,40 +118,23 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastCollisionTime >= collisionCooldown) {
                 lastCollisionTime = currentTime;
-                life.decreaseLife(20);  // Уменьшаем жизнь игрока при столкновении
+                life.decreaseLife(20);
                 Log.i("info", "Player collided with badBox and lost life");
             }
         }
 
-        // Проверка, если игрок касается какого-либо блока
         boolean isOnBlock = false;
         for (Block block : blockList) {
-            if (block.isOnBlock(player)) {
+            if (player.checkBlockCollision(blockList)) {
                 isOnBlock = true;
-
-                // Обрабатываем столкновение с блоком, чтобы игрок не мог пройти сквозь него
-                if (player.getY() + player.getHeight() <= block.getY()) {
-                    // Если игрок не ниже блока, значит он на нем
-                    player.setY(block.getY() - player.getHeight());  // Помещаем игрока сверху блока
-                }
                 break;
             }
         }
 
-        // Если игрок не на блоке, ограничение земли становится 500
-        if (isOnBlock) {
-            // Найдем блок, на котором находится игрок, и установим ограничение земли по y этого блока
-            for (Block block : blockList) {
-                if (block.isOnBlock(player)) {
-                    player.LandRestriction = (int) block.getY();  // Устанавливаем ограничение земли на основе блока
-                    break;  // Если мы нашли блок, можно выйти из цикла
-                }
-            }
-        } else {
-            player.LandRestriction = 500;  // Если игрок не на блоке, ограничение земли становится 500
+        if (!isOnBlock) {
+            player.LandRestriction = 500;
         }
 
-        // Обновление состояния игрока и badBox
         player.update();
         badBox.update();
     }
@@ -199,26 +164,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     // Управление движением
     public void moveLeft() {
         player.setMovingLeft(true);
-        animation.startWalkingAnimation();
     }
 
     public void stopLeft() {
         player.setMovingLeft(false);
-        if (!player.isMoving()) {
-            animation.stopWalkingAnimation();
-        }
     }
 
     public void moveRight() {
         player.setMovingRight(true);
-        animation.startWalkingAnimation();
     }
 
     public void stopRight() {
         player.setMovingRight(false);
-        if (!player.isMoving()) {
-            animation.stopWalkingAnimation();
-        }
     }
 
     public void jump() {
@@ -230,6 +187,18 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 (player.getY() + getHeight()) / 2 - 125,
                 BitmapFactory.decodeResource(getResources(), R.drawable.bullet));
         bullets.add(newBullet);
+    }
+
+    public Animation getAnnimation() {
+        return animation;
+    }
+
+    public PlayerController getPlayerController() {
+        return playerController;
+    }
+
+    public Player getPlayer() {
+        return player;
     }
 
     class GameThread extends Thread {

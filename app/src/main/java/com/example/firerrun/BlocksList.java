@@ -1,14 +1,23 @@
 package com.example.firerrun;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class BlocksList {
-    public static List<Block> blockList = new ArrayList<>();
-    public static int[][] Blocks;
+    //x = x
+    //y = y
+    //w = width
+    //h = height
+    public static int[][] Blocks = {
+    //       x   y    w    h
+            {0, 700, 100, 100},
+            {100, 700, 100, 100},
+            {200, 700, 100, 100},
+            {300, 700, 100, 100},
+            {400, 700, 100, 100},
+            {500, 700, 100, 100},
+            {600, 700, 100, 100},
+            {700, 700, 100, 100},
+            {800, 700, 100, 100},
+            {900, 700, 100, 100},
+            {1000, 700, 100, 100},
 
-    static {
-        Blocks = new int[][]{};
-
-    }
+    };
 }
