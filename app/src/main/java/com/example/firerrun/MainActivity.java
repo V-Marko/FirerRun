@@ -9,7 +9,6 @@ import android.widget.Button;
 public class MainActivity extends Activity {
 
     private GameView gameView;
-    private Button btnLeft, btnRight, btnJump, btnShoot;
     private PlayerController playerController;
 
     @SuppressLint("ClickableViewAccessibility")
@@ -19,22 +18,21 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
         gameView = findViewById(R.id.gameView);
-        btnLeft = findViewById(R.id.btnLeft);
-        btnRight = findViewById(R.id.btnRight);
-        btnJump = findViewById(R.id.btnJump);
-        btnShoot = findViewById(R.id.btnShoot);
+        Player player = gameView.getPlayer();
+        playerController = new PlayerController(player, gameView);
 
-        // Инициализация контроллера
-        playerController = new PlayerController(gameView.getPlayer(), gameView);
+        Button btnLeft = findViewById(R.id.btnLeft);
+        Button btnRight = findViewById(R.id.btnRight);
+        Button btnJump = findViewById(R.id.btnJump);
+        Button btnShoot = findViewById(R.id.btnShoot);
 
-        // Обработка нажатий кнопок
         btnLeft.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    playerController.moveLeft();
+                    playerController.moveLeft(); // Движение влево
                     break;
                 case MotionEvent.ACTION_UP:
-                    playerController.stopLeft();
+                    playerController.stopLeft(); // Остановка движения влево
                     break;
             }
             return true;
@@ -43,10 +41,10 @@ public class MainActivity extends Activity {
         btnRight.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    playerController.moveRight();
+                    playerController.moveRight(); // Движение вправо
                     break;
                 case MotionEvent.ACTION_UP:
-                    playerController.stopRight();
+                    playerController.stopRight(); // Остановка движения вправо
                     break;
             }
             return true;
@@ -54,16 +52,10 @@ public class MainActivity extends Activity {
 
         btnJump.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                playerController.jump();
+                playerController.jump(); // Прыжок
             }
             return true;
         });
-
-        btnShoot.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                playerController.shoot();
-            }
-            return true;
-        });
+        btnShoot.setOnClickListener(v -> playerController.shoot());
     }
 }

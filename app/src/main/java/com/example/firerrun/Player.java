@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -11,32 +12,35 @@ import java.util.List;
 
 public class Player {
 
-    private float x, y;
+    private float x;
+    private static float y;
     private float speed = 10f;
     private boolean movingLeft, movingRight, jumping;
     private boolean isIdle;
-    private float jumpSpeed = 15f;
-    private float gravity = 1f;
+    private float jumpSpeed = 100;
     private Bitmap bodyImage, headImage, gunImage, bulletImage;
     private Context context;
 
     public static int width = 150;
-    public int height = 150;
+    public static int height = 150;
     public int headWidth = 150;
     public int headHeight = 150;
     public int gunWidth = 150;
     public int gunHeight = 90;
 
-    private long lastIdleTime = 0;
     private static final long ANIMATION_DELAY = 300;
     private List<Block> blocks;
     public float LandRestriction = 500;
     private List<Bullet> bullets;
 
-    private int person_stop_int = 0;
+    private boolean isFacingLeft;
 
-    private int lives = 100; // Текущее количество жизней
-    private int maxLives = 100; // Максимальное количество жизней
+    private float initialJumpSpeed = -10f;
+    private float gravity = 1.2f;
+    private float maxJumpHeight = 5f;
+
+    private float currentJumpHeight = 0f;
+    private Animation animation;
 
     public Player(Context context) {
         this.context = context;
@@ -56,126 +60,116 @@ public class Player {
         bullets = new ArrayList<>();
         isIdle = true;
         blocks = new ArrayList<>();
+
+        animation = new Animation(this);
+
     }
 
     public void update() {
         if (movingLeft) {
             x -= speed;
-            if (width > 0) {
-                width = -width;
-                headWidth = -headWidth;
-                gunWidth = -gunWidth;
-            }
+            isFacingLeft = true;
         }
+
         if (movingRight) {
             x += speed;
-            if (width < 0) {
-                width = -width;
-                headWidth = -headWidth;
-                gunWidth = -gunWidth;
+            isFacingLeft = false;
+        }
+
+        if (jumping) {
+            y += jumpSpeed; // Обновляем позицию по Y
+            jumpSpeed += gravity; // Увеличиваем скорость под действием гравитации
+            currentJumpHeight += Math.abs(jumpSpeed); // Обновляем текущую высоту прыжка
+
+            // Если достигнута максимальная высота прыжка или игрок приземлился
+            if (currentJumpHeight >= maxJumpHeight || y >= LandRestriction) {
+                jumping = false; // Завершаем прыжок
+                y = LandRestriction; // Фиксируем позицию на земле
+                Log.i("Jump", "JUMP ended");
             }
         }
 
-        // Проверка, находится ли игрок на блоке
-        boolean isOnBlock = isOnAnyBlock(blocks);
-
-        if (!isOnBlock && !jumping) {
-            // Если игрок не на блоке и не прыгает, он падает
-            y += jumpSpeed;
-            jumpSpeed += gravity;
-        } else if (jumping) {
-            y -= jumpSpeed;
-            jumpSpeed -= gravity;
-
-            if (y >= LandRestriction) {
-                y = LandRestriction;
-                jumping = false;
-                jumpSpeed = 15f;
-            }
+        // Гравитация (падение, если игрок не на земле и не прыгает)
+        if (!isOnGround() && !jumping) {
+            y += jumpSpeed; // Обновляем позицию по Y
+            jumpSpeed += gravity; // Увеличиваем скорость падения под действием гравитации
         }
 
         // Проверка столкновений с блоками
-        checkBlockCollision(blocks);
+        boolean isOnBlock = checkBlockCollision(blocks);
 
-        if (!movingLeft && !movingRight && !jumping) {
-            isIdle = true;
-            onIdle();
+        // Если игрок не на блоке и не прыгает, он падает
+        if (!isOnBlock && !jumping) {
+            y += jumpSpeed; // Обновляем позицию по Y
+            jumpSpeed += gravity; // Увеличиваем скорость падения под действием гравитации
+        }
+    }
+    public void jump() {
+        if (isOnGround() && !jumping) { // Прыжок возможен только если игрок на земле и не в прыжке
+            jumping = true;
+            jumpSpeed = initialJumpSpeed; // Устанавливаем начальную скорость прыжка
+            currentJumpHeight = 0f; // Сбрасываем текущую высоту прыжка
+            Log.i("Jump", "JUMP initiated");
         }
     }
 
-    public boolean isOnBlock(Player player) {
-        return player.getX() + player.getWidth() > x && player.getX() < x + width &&
-                player.getY() + player.getHeight() >= y && player.getY() + player.getHeight() <= y + height;
+    public boolean isOnGround() {
+        boolean groundCondition = (y >= LandRestriction);
+        boolean blockCondition = checkBlockCollision(blocks);
+
+        return groundCondition || blockCondition;
     }
 
-    private void onIdle() {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastIdleTime >= ANIMATION_DELAY) {
-            bodyImage = (person_stop_int % 2 == 0) ?
-                    BitmapFactory.decodeResource(context.getResources(), R.drawable.person_stop1) :
-                    BitmapFactory.decodeResource(context.getResources(), R.drawable.person_stop2);
-            bodyImage = Bitmap.createScaledBitmap(bodyImage, width, height, false);
-            person_stop_int++;
-            lastIdleTime = currentTime;
+    public boolean checkBlockCollision(List<Block> blocks) {
+        boolean isColliding = false;
+        LandRestriction = Player.y-Player.height;
+
+        for (Block block : blocks) {
+            boolean xOverlap = (x < block.getX() + block.getWidth()) &&
+                    (x + width > block.getX());
+
+            boolean yOverlap = (y + height >= block.getY()) &&
+                    (y + height <= block.getY() + block.getHeight());
+
+            Log.i("BlockCollision",
+                    "Block: " + block.getX() + "," + block.getY() +
+                            " | Player: " + x + "," + y +
+                            " | Overlap: " + xOverlap + "," + yOverlap
+            );
+
+            if (xOverlap && yOverlap) {
+                isColliding = true;
+
+                if (y + height <= block.getY() + block.getHeight() && jumpSpeed >= 0) {
+                    y = block.getY() - height; // Устанавливаем игрока на верхнюю грань блока
+                    LandRestriction = (int) block.getY(); // Обновляем LandRestriction
+                    jumpSpeed = 0; // Сбрасываем скорость прыжка
+                }
+            }
         }
+
+        return isColliding;
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawBitmap(bodyImage, x, y, null);
+        Bitmap currentBodyImage = bodyImage;
+
+        if (isFacingLeft) {
+            Matrix matrix = new Matrix();
+            matrix.preScale(-1, 1);
+            currentBodyImage = Bitmap.createBitmap(bodyImage, 0, 0, bodyImage.getWidth(), bodyImage.getHeight(), matrix, false);
+        }
+
+        canvas.drawBitmap(currentBodyImage, x, y, null);
         canvas.drawBitmap(headImage, x + (width - headWidth) / 2 - 15, y - headHeight + 20, null);
         canvas.drawBitmap(gunImage, x, y, null);
+
         for (Bullet bullet : bullets) {
             bullet.draw(canvas);
         }
     }
 
-    public void shoot() {
-        float bulletX = x + width;
-        float bulletY = y + height / 2;
-        bullets.add(new Bullet(bulletX, bulletY, bulletImage));
-    }
 
-    public void setMovingLeft(boolean movingLeft) {
-        this.movingLeft = movingLeft;
-    }
-
-    public void setMovingRight(boolean movingRight) {
-        this.movingRight = movingRight;
-    }
-
-    public boolean isOnGround() {
-        return !jumping && y >= LandRestriction;
-    }
-
-    public void increaseLife(int amount) {
-        lives += amount;
-        if (lives > maxLives) {
-            lives = maxLives;
-        }
-    }
-
-
-    public void resetLives() {
-        lives = maxLives;
-    }
-
-    public void jump() {
-        if (isOnGround()) {
-            jumping = true;
-            jumpSpeed = 15f;
-        }
-    }
-
-    public int getLives() {
-        return lives;
-    }
-
-    public void decreaseLife(int amount) {
-        lives -= amount;
-        if (lives < 0) {
-            lives = 0;
-        }
-    }
 
     public void setPlayerImage(Bitmap newBodyImage, Bitmap newHeadImage, Bitmap newGunImage) {
         this.bodyImage = Bitmap.createScaledBitmap(newBodyImage, width, height, false);
@@ -188,11 +182,11 @@ public class Player {
     }
 
     public float getX() {
-        return this.x;
+        return x;
     }
 
     public float getY() {
-        return this.y;
+        return y;
     }
 
     public int getWidth() {
@@ -203,66 +197,29 @@ public class Player {
         return this.height;
     }
 
-    public boolean checkBlockCollision(List<Block> blocks) {
-        boolean isColliding = false;
-        LandRestriction = 1000; // Сброс ограничения земли
-
-        for (Block block : blocks) {
-            boolean xOverlap = x + Math.abs(width) > block.getX() && x < block.getX() + block.getWidth();
-            boolean yOverlap = y + height > block.getY() && y < block.getY() + block.getHeight();
-
-            if (xOverlap && yOverlap) {
-                isColliding = true;
-
-                // Если игрок находится над блоком и падает
-                if (y + height <= block.getY() + block.getHeight() && jumpSpeed >= 0) {
-                    y = block.getY() - height; // Устанавливаем игрока на блок
-                    LandRestriction = (int) block.getY(); // Устанавливаем ограничение земли
-                    jumpSpeed = 0; // Останавливаем падение
-                    jumping = false; // Завершаем прыжок
-                }
-
-                // Если игрок сталкивается с боковой стороной блока
-                if (movingRight) {
-                    x = block.getX() - Math.abs(width); // Остановка вправо
-                    movingRight = false;
-                } else if (movingLeft) {
-                    x = block.getX() + block.getWidth(); // Остановка влево
-                    movingLeft = false;
-                }
-            }
+    public void setBlocks(List<Block> blockList) {
+        if (blockList == null) {
+            this.blocks = new ArrayList<>();
+        } else {
+            this.blocks = new ArrayList<>(blockList);
         }
-
-        return isColliding;
     }
-
-
-
-    public boolean checkCollision(Block block) {
-        return this.getX() < block.getX() + block.getWidth() &&
-                this.getX() + this.getWidth() > block.getX() &&
-                this.getY() < block.getY() + block.getHeight() &&
-                this.getY() + this.getHeight() > block.getY();
-    }
-
-
-
-    public boolean isJumping() {
-        return jumping;
-    }
-
-    public boolean isOnAnyBlock(List<Block> blocks) {
-        for (Block block : blocks) {
-            if (isOnBlock(block)) {
-                return true;
-            }
+    public void setMovingLeft(boolean movingLeft) {
+        this.movingLeft = movingLeft;
+        if (movingLeft) {
+            animation.startWalkingAnimation();
+        } else if (!movingRight) {
+            animation.stopWalkingAnimation();
         }
-        return false;
     }
 
-    public boolean isOnBlock(Block block) {
-        return x + width > block.getX() && x < block.getX() + block.getWidth() &&
-                y + height >= block.getY() && y + height <= block.getY() + block.getHeight();
+    public void setMovingRight(boolean movingRight) {
+        this.movingRight = movingRight;
+        if (movingRight) {
+            animation.startWalkingAnimation();
+        } else if (!movingLeft) {
+            animation.stopWalkingAnimation();
+        }
     }
 
 

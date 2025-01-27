@@ -21,7 +21,6 @@ public class Animation {
         loadGunImage(); // Загружаем изображение оружия
     }
 
-    // Загрузка кадров анимации
     private void loadWalkFrames() {
         int[] frameResources = {
                 R.drawable.person_walk_1,
@@ -39,17 +38,14 @@ public class Animation {
         }
     }
 
-    // Загрузка изображения головы
     private void loadHeadImage() {
         headImage = BitmapFactory.decodeResource(player.getContext().getResources(), R.drawable.person_head);
     }
 
-    // Загрузка изображения оружия
     private void loadGunImage() {
         gunImage = BitmapFactory.decodeResource(player.getContext().getResources(), R.drawable.person_gun);
     }
 
-    // Метод для запуска анимации ходьбы
     public void startWalkingAnimation() {
         if (!isAnimating) {
             isAnimating = true;

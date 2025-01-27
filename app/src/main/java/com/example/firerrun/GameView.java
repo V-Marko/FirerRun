@@ -39,8 +39,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             Block block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block);
             blockList.add(block);
         }
+        player = new Player(context);
+        player.setBlocks(blockList);
 
-        // Инициализация игрока и других объектов
         gameThread = new GameThread(getHolder(), this);
         player = new Player(context);
         life = new Life();
@@ -53,8 +54,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         textPaint.setTextAlign(Paint.Align.CENTER);
         badBox = new BadBox(500, 500, BitmapFactory.decodeResource(context.getResources(), R.drawable.bad_box));
 
-        // Инициализация контроллера
         playerController = new PlayerController(player, this);
+    }
+
+    public void shoot() {
+        Bullet newBullet = new Bullet((player.getX() + player.getWidth()),
+                (player.getY() + getHeight()) / 2 - 125,
+                BitmapFactory.decodeResource(getResources(), R.drawable.bullet));
+        bullets.add(newBullet);
+        Log.i("GameView", "Bullet shot");
     }
 
     @Override
@@ -180,13 +188,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public void jump() {
         player.jump();
-    }
-
-    public void shoot() {
-        Bullet newBullet = new Bullet((player.getX() + player.getWidth()),
-                (player.getY() + getHeight()) / 2 - 125,
-                BitmapFactory.decodeResource(getResources(), R.drawable.bullet));
-        bullets.add(newBullet);
     }
 
     public Animation getAnnimation() {

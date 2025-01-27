@@ -1,5 +1,7 @@
 package com.example.firerrun;
 
+import android.util.Log;
+
 public class PlayerController {
     private Player player;
     private GameView gameView;
@@ -12,70 +14,39 @@ public class PlayerController {
     // Метод для движения влево
     public void moveLeft() {
         player.setMovingLeft(true);
+        player.setMovingRight(false); // Останавливаем движение вправо
+        Log.i("PlayerController", "Moving left");
     }
 
     // Метод для остановки движения влево
     public void stopLeft() {
         player.setMovingLeft(false);
+        Log.i("PlayerController", "Stopped moving left");
     }
 
     // Метод для движения вправо
     public void moveRight() {
         player.setMovingRight(true);
+        player.setMovingLeft(false); // Останавливаем движение влево
+        Log.i("PlayerController", "Moving right");
     }
 
     // Метод для остановки движения вправо
     public void stopRight() {
         player.setMovingRight(false);
+        Log.i("PlayerController", "Stopped moving right");
     }
 
-    // Метод для прыжка
     public void jump() {
         player.jump();
+        Log.i("PlayerController", "Jumping");
     }
 
     // Метод для стрельбы
     public void shoot() {
-        gameView.shoot();
-    }
-
-    // Метод для проверки, находится ли игрок на земле
-    public boolean isOnGround() {
-        return !player.isJumping();
-    }
-
-    // Метод для получения текущего количества жизней игрока
-    public int getPlayerLives() {
-        return player.getLives();
-    }
-
-    // Метод для уменьшения жизней игрока
-    public void decreasePlayerLives(int amount) {
-        player.decreaseLife(amount);
-    }
-
-    // Метод для увеличения жизней игрока
-    public void increasePlayerLives(int amount) {
-        player.increaseLife(amount);
-    }
-
-    // Метод для сброса жизней игрока до максимального значения
-    public void resetPlayerLives() {
-        player.resetLives();
-    }
-
-    // Метод для получения текущей позиции игрока по X
-    public float getPlayerX() {
-        return player.getX();
-    }
-
-    // Метод для получения текущей позиции игрока по Y
-    public float getPlayerY() {
-        return player.getY();
-    }
-
-    // Метод для проверки столкновения игрока с блоком
-    public boolean checkPlayerBlockCollision(Block block) {
-        return player.checkCollision(block);
+        if (gameView != null) {
+            gameView.shoot();
+            Log.i("PlayerController", "Shooting");
+        }
     }
 }
