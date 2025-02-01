@@ -11,27 +11,27 @@ public class PlayerController {
         this.gameView = gameView;
     }
 
-    // Метод для движения влево
+    public void onShootButtonPressed() {
+        gameView.shoot();
+    }
+
     public void moveLeft() {
         player.setMovingLeft(true);
-        player.setMovingRight(false); // Останавливаем движение вправо
+        player.setMovingRight(false);
         Log.i("PlayerController", "Moving left");
     }
 
-    // Метод для остановки движения влево
     public void stopLeft() {
         player.setMovingLeft(false);
         Log.i("PlayerController", "Stopped moving left");
     }
 
-    // Метод для движения вправо
     public void moveRight() {
         player.setMovingRight(true);
-        player.setMovingLeft(false); // Останавливаем движение влево
+        player.setMovingLeft(false);
         Log.i("PlayerController", "Moving right");
     }
 
-    // Метод для остановки движения вправо
     public void stopRight() {
         player.setMovingRight(false);
         Log.i("PlayerController", "Stopped moving right");
@@ -40,13 +40,5 @@ public class PlayerController {
     public void jump() {
         player.jump();
         Log.i("PlayerController", "Jumping");
-    }
-
-    // Метод для стрельбы
-    public void shoot() {
-        if (gameView != null) {
-            gameView.shoot();
-            Log.i("PlayerController", "Shooting");
-        }
     }
 }

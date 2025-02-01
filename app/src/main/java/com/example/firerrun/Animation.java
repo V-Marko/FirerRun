@@ -6,19 +6,21 @@ import android.os.Handler;
 
 public class Animation {
     private Player player;
-    private int walkIndex = 0; // Индекс текущего кадра анимации
-    private Bitmap[] walkFrames; // Массив кадров анимации
-    private Bitmap headImage; // Изображение головы
-    private Bitmap gunImage; // Изображение оружия
-    private Handler handler = new Handler(); // Handler для управления анимацией
-    private int frameDuration = 100; // Задержка между кадрами (в миллисекундах)
-    private boolean isAnimating = false; // Флаг, указывающий, активна ли анимация
+    private int walkIndex = 0;
+    private int stopIndex = 0;
+    private Bitmap[] walkFrames, walkFramesStop;
+    private Bitmap headImage;
+    private Bitmap gunImage;
+    Handler handler = new Handler();
+    private int frameDuration = 500;
+    private boolean isAnimating = false;
+    private boolean isStopping = false;
 
     public Animation(Player player) {
         this.player = player;
-        loadWalkFrames(); // Загружаем кадры анимации
-        loadHeadImage(); // Загружаем изображение головы
-        loadGunImage(); // Загружаем изображение оружия
+        loadWalkFrames();
+        loadHeadImage();
+        loadGunImage(); // Загружаем изображение
     }
 
     private void loadWalkFrames() {
@@ -32,9 +34,18 @@ public class Animation {
                 R.drawable.person_walk_7,
                 R.drawable.person_walk_8,
         };
+        int[] frameResourcesStop = {
+                R.drawable.person_stop1,
+                R.drawable.person_stop2,
+        };
         walkFrames = new Bitmap[frameResources.length];
+        walkFramesStop = new Bitmap[frameResourcesStop.length];
+
         for (int i = 0; i < frameResources.length; i++) {
             walkFrames[i] = BitmapFactory.decodeResource(player.getContext().getResources(), frameResources[i]);
+        }
+        for (int i = 0; i < frameResourcesStop.length; i++) {
+            walkFramesStop[i] = BitmapFactory.decodeResource(player.getContext().getResources(), frameResourcesStop[i]);
         }
     }
 
@@ -49,25 +60,27 @@ public class Animation {
     public void startWalkingAnimation() {
         if (!isAnimating) {
             isAnimating = true;
-            handler.post(animationRunnable); // Запускаем анимацию
+            isStopping = false;
+            handler.post(animationRunnable);
         }
     }
 
-    // Метод для остановки анимации ходьбы
     public void stopWalkingAnimation() {
         isAnimating = false;
-        handler.removeCallbacks(animationRunnable); // Останавливаем анимацию
+        isStopping = true;
+        handler.post(animationRunnable);
     }
 
     private Runnable animationRunnable = new Runnable() {
         @Override
         public void run() {
             if (isAnimating) {
-                // Устанавливаем текущий кадр анимации
                 player.setPlayerImage(walkFrames[walkIndex], headImage, gunImage);
-                // Переходим к следующему кадру
                 walkIndex = (walkIndex + 1) % walkFrames.length;
-                // Повторяем через frameDuration миллисекунд
+                handler.postDelayed(this, frameDuration);
+            } else if (isStopping) {
+                player.setPlayerImage(walkFramesStop[stopIndex], headImage, gunImage);
+                stopIndex = (stopIndex + 1) % walkFramesStop.length;
                 handler.postDelayed(this, frameDuration);
             }
         }

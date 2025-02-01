@@ -34,16 +34,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         super(context, attrs);
         getHolder().addCallback(this);
 
-        // Инициализация блоков
         for (int[] blockData : BlocksList.Blocks) {
-            Block block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block);
-            blockList.add(block);
+            Block block;
+            switch (blockData[4]) {
+                case 0:
+                    block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block);
+                    blockList.add(block);
+                    break;
+                case 1:
+                    block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block2);
+                    blockList.add(block);
+            }
         }
         player = new Player(context);
         player.setBlocks(blockList);
 
         gameThread = new GameThread(getHolder(), this);
-        player = new Player(context);
         life = new Life();
         playerImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.stand_1);
         playerImage = Bitmap.createScaledBitmap(playerImage, 100, 100, false);
@@ -58,11 +64,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void shoot() {
-        Bullet newBullet = new Bullet((player.getX() + player.getWidth()),
-                (player.getY() + getHeight()) / 2 - 125,
-                BitmapFactory.decodeResource(getResources(), R.drawable.bullet));
+        boolean isFacingLeft = Player.isFacingLeft;
+        float bulletX = isFacingLeft ? (player.getX() - Bullet.width) : (player.getX() + player.getWidth());
+        float bulletY = (player.getY() + player.getHeight()) / 2 + 217;
+
+        Bullet newBullet = new Bullet(bulletX, bulletY, BitmapFactory.decodeResource(getResources(), R.drawable.bullet), isFacingLeft);
         bullets.add(newBullet);
-        Log.i("GameView", "Bullet shot");
+
+        Log.i("GameView", "Bullet shot in direction: " + (isFacingLeft ? "Left" : "Right"));
     }
 
     @Override
@@ -76,6 +85,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         gameThread.setRunning(true);
         gameThread.start();
     }
+
+
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
@@ -95,7 +106,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
-        // Обновление состояния пуль
         for (int i = bullets.size() - 1; i >= 0; i--) {
             Bullet bullet = bullets.get(i);
             bullet.update();
@@ -108,11 +118,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             if (badBox.checkCollisionBullet(bullet)) {
                 bullets.remove(i);
                 badBox.die();
-                Log.i("info", "Bullet hit bad_box and bad_box is destroyed");
             }
 
             for (Block block : blockList) {
-                if (bullet.checkCollision(block)) {
+                if (bullet.getX() < block.getX() + block.getWidth() &&
+                        bullet.getX() + Bullet.width > block.getX() &&
+                        bullet.getY() < block.getY() + block.getHeight() &&
+                        bullet.getY() + Bullet.height > block.getY()) {
                     bullets.remove(i);
                     blockList.remove(block);
                     Log.i("info", "Bullet hit block and block is destroyed");
@@ -121,7 +133,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        // Проверка столкновения игрока с badBox
         if (badBox.checkCollisionPlayer(player)) {
             long currentTime = System.currentTimeMillis();
             if (currentTime - lastCollisionTime >= collisionCooldown) {
@@ -154,11 +165,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         if (background != null) {
             canvas.drawBitmap(background, 0, 0, null);
         }
-
-        // Отрисовка пуль
         for (Bullet bullet : bullets) {
-            bullet.draw(canvas);
+            try{
+                bullet.draw(canvas);
+
+            }catch (Exception е){}
         }
+
 
         player.draw(canvas);
         badBox.draw(canvas);
@@ -167,35 +180,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         for (Block block : blockList) {
             block.draw(canvas);
         }
-    }
-
-    // Управление движением
-    public void moveLeft() {
-        player.setMovingLeft(true);
-    }
-
-    public void stopLeft() {
-        player.setMovingLeft(false);
-    }
-
-    public void moveRight() {
-        player.setMovingRight(true);
-    }
-
-    public void stopRight() {
-        player.setMovingRight(false);
-    }
-
-    public void jump() {
-        player.jump();
-    }
-
-    public Animation getAnnimation() {
-        return animation;
-    }
-
-    public PlayerController getPlayerController() {
-        return playerController;
     }
 
     public Player getPlayer() {
@@ -215,22 +199,32 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         public void setRunning(boolean running) {
             this.running = running;
         }
-
         @Override
         public void run() {
             Canvas canvas;
+            long lastTime = System.nanoTime();
+            double nsPerUpdate = 1000000000.0 / 120.0; // 120 FPS
+            double delta = 0;
+
             while (running) {
-                canvas = null;
-                try {
-                    canvas = surfaceHolder.lockCanvas();
-                    synchronized (surfaceHolder) {
-                        gameView.update();
-                        gameView.draw(canvas);
+                long now = System.nanoTime();
+                delta += (now - lastTime) / nsPerUpdate;
+                lastTime = now;
+
+                while (delta >= 1) {
+                    canvas = null;
+                    try {
+                        canvas = surfaceHolder.lockCanvas();
+                        synchronized (surfaceHolder) {
+                            gameView.update();
+                            gameView.draw(canvas);
+                        }
+                    } finally {
+                        if (canvas != null) {
+                            surfaceHolder.unlockCanvasAndPost(canvas);
+                        }
                     }
-                } finally {
-                    if (canvas != null) {
-                        surfaceHolder.unlockCanvasAndPost(canvas);
-                    }
+                    delta--;
                 }
             }
         }

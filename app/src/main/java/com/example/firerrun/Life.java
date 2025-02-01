@@ -32,22 +32,22 @@ public class Life {
         }
     }
 
-    public void increaseLife(int amount) {
-        currentLives += amount;
-        if (currentLives > maxLives) {
-            currentLives = maxLives;
-        }
-    }
-
-    public int getCurrentLives() {
-        return currentLives;
-    }
-
-    public int getMaxLives() {
-        return maxLives;
-    }
-
-    public void resetLives() {
-        currentLives = maxLives;
-    }
+//    public void increaseLife(int amount) {
+//        currentLives += amount;
+//        if (currentLives > maxLives) {
+//            currentLives = maxLives;
+//        }
+//    }
+//
+//    public int getCurrentLives() {
+//        return currentLives;
+//    }
+//
+//    public int getMaxLives() {
+//        return maxLives;
+//    }
+//
+//    public void resetLives() {
+//        currentLives = maxLives;
+//    }
 }

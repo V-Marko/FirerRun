@@ -1,43 +1,44 @@
-
 package com.example.firerrun;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 
 public class Bullet {
     private float x, y;
     public static final float DEFAULT_SPEED = 20f;
     private float speed;
     private Bitmap image;
-    private float PlayerWidth = Player.width;
     public static int width = 50;
     public static int height = 20;
-    public Bullet(float x, float y, Bitmap image) {
+
+    private boolean isFacingLeft;
+
+    public Bullet(float x, float y, Bitmap image, boolean isFacingLeft) {
         this.x = x;
         this.y = y;
         this.image = Bitmap.createScaledBitmap(image, width, height, false);
         this.speed = DEFAULT_SPEED;
-    }
-
-    public void setSpeed(float speed) {
-        this.speed = speed;
+        this.isFacingLeft = isFacingLeft;
     }
 
     public void update() {
-
-        if(PlayerWidth > 0){
-            x += speed;
-
-        } else if(PlayerWidth < 0 ) {
-
+        if (isFacingLeft) {
             x -= speed;
+        } else {
+            x += speed;
         }
-
-
     }
 
     public void draw(Canvas canvas) {
-        canvas.drawBitmap(image, x, y - 50, null);
+        if (isFacingLeft) {
+            Matrix matrix = new Matrix();
+            matrix.preScale(-1, 1);
+            Bitmap mirroredImage = Bitmap.createBitmap(image, 0, 0, image.getWidth(), image.getHeight(), matrix, false);
+            canvas.drawBitmap(mirroredImage, x, y, null);
+        } else {
+            canvas.drawBitmap(image, x, y, null);
+        }
     }
 
     public float getX() {
@@ -48,23 +49,15 @@ public class Bullet {
         return y;
     }
 
-    public Bitmap getImage() {
-        return image;
+    public boolean isFacingLeft() {
+        return isFacingLeft;
     }
 
     public float getWidth() {
         return width;
     }
-    public float getHeight(){
+
+    public float getHeight() {
         return height;
     }
-
-
-    public boolean checkCollision(Block block) {
-        return this.getX() < block.getX() + block.getWidth() &&
-                this.getX() + this.getWidth() > block.getX() &&
-                this.getY() < block.getY() + block.getHeight() &&
-                this.getY() + this.getHeight() > block.getY();
-    }
-
 }

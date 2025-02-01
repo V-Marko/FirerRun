@@ -29,10 +29,10 @@ public class MainActivity extends Activity {
         btnLeft.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    playerController.moveLeft(); // Движение влево
+                    playerController.moveLeft();
                     break;
                 case MotionEvent.ACTION_UP:
-                    playerController.stopLeft(); // Остановка движения влево
+                    playerController.stopLeft();
                     break;
             }
             return true;
@@ -41,10 +41,10 @@ public class MainActivity extends Activity {
         btnRight.setOnTouchListener((v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
-                    playerController.moveRight(); // Движение вправо
+                    playerController.moveRight();
                     break;
                 case MotionEvent.ACTION_UP:
-                    playerController.stopRight(); // Остановка движения вправо
+                    playerController.stopRight();
                     break;
             }
             return true;
@@ -52,10 +52,11 @@ public class MainActivity extends Activity {
 
         btnJump.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                playerController.jump(); // Прыжок
+                playerController.jump(); // jump
             }
             return true;
         });
-        btnShoot.setOnClickListener(v -> playerController.shoot());
+
+        btnShoot.setOnClickListener(v -> playerController.onShootButtonPressed());
     }
 }
