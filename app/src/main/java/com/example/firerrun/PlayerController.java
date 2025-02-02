@@ -38,6 +38,7 @@ public class PlayerController {
     }
 
     public void jump() {
+
         player.jump();
         Log.i("PlayerController", "Jumping");
     }

@@ -10,6 +10,9 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.content.Context;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +29,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     private long lastCollisionTime = 0;
     private final long collisionCooldown = 300;
     private PlayerController playerController;
+    private SwitchCader switchCader;
+
+    private int BlockID = 0; // block id
 
     private List<Block> blockList = new ArrayList<>();
     private List<Bullet> bullets = new ArrayList<>();
@@ -34,17 +40,20 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         super(context, attrs);
         getHolder().addCallback(this);
 
+        Log.i("BlockListSIZE", String.valueOf(BlocksList.Blocks.length));
+
         for (int[] blockData : BlocksList.Blocks) {
             Block block;
             switch (blockData[4]) {
                 case 0:
-                    block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block);
-                    blockList.add(block);
+                    BlockID = R.drawable.block;
                     break;
                 case 1:
-                    block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], R.drawable.block2);
-                    blockList.add(block);
+                    BlockID = R.drawable.block2;
+                    break;
             }
+            block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], BlockID);
+            blockList.add(block);
         }
         player = new Player(context);
         player.setBlocks(blockList);
@@ -61,17 +70,24 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         badBox = new BadBox(500, 500, BitmapFactory.decodeResource(context.getResources(), R.drawable.bad_box));
 
         playerController = new PlayerController(player, this);
+
+        switchCader = new SwitchCader(player, this);
+    }
+
+    public static int getScreenWidth(Context context) {
+        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getMetrics(displayMetrics);
+        return displayMetrics.widthPixels;
     }
 
     public void shoot() {
         boolean isFacingLeft = Player.isFacingLeft;
         float bulletX = isFacingLeft ? (player.getX() - Bullet.width) : (player.getX() + player.getWidth());
-        float bulletY = (player.getY() + player.getHeight()) / 2 + 217;
+        float bulletY = player.getY();
 
         Bullet newBullet = new Bullet(bulletX, bulletY, BitmapFactory.decodeResource(getResources(), R.drawable.bullet), isFacingLeft);
         bullets.add(newBullet);
-
-        Log.i("GameView", "Bullet shot in direction: " + (isFacingLeft ? "Left" : "Right"));
     }
 
     @Override
@@ -85,8 +101,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         gameThread.setRunning(true);
         gameThread.start();
     }
-
-
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
@@ -106,6 +120,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     public void update() {
+        switchCader.updateCader();
+
         for (int i = bullets.size() - 1; i >= 0; i--) {
             Bullet bullet = bullets.get(i);
             bullet.update();
@@ -126,8 +142,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                         bullet.getY() < block.getY() + block.getHeight() &&
                         bullet.getY() + Bullet.height > block.getY()) {
                     bullets.remove(i);
-                    blockList.remove(block);
-                    Log.i("info", "Bullet hit block and block is destroyed");
                     break;
                 }
             }
@@ -157,21 +171,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         player.update();
         badBox.update();
     }
-
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
+
 
         if (background != null) {
             canvas.drawBitmap(background, 0, 0, null);
         }
         for (Bullet bullet : bullets) {
-            try{
+            try {
                 bullet.draw(canvas);
-
-            }catch (Exception е){}
+            } catch (Exception e) {}
         }
-
 
         player.draw(canvas);
         badBox.draw(canvas);
@@ -186,6 +198,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         return player;
     }
 
+    public List<Block> getBlockList() {
+        return blockList;
+    }
+
+    public List<Bullet> getBullets() {
+        return bullets;
+    }
+
+    public BadBox getBadBox() {
+        return badBox;
+    }
+
+
     class GameThread extends Thread {
         private SurfaceHolder surfaceHolder;
         private GameView gameView;
@@ -199,11 +224,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         public void setRunning(boolean running) {
             this.running = running;
         }
+
         @Override
         public void run() {
             Canvas canvas;
             long lastTime = System.nanoTime();
-            double nsPerUpdate = 1000000000.0 / 120.0; // 120 FPS
+            double nsPerUpdate = 1_000_000_000.0 / 120.0; // 120 FPS
             double delta = 0;
 
             while (running) {

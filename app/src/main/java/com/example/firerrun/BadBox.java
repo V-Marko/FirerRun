@@ -6,7 +6,8 @@ import android.graphics.Canvas;
 import android.graphics.Rect;
 
 public class BadBox {
-    private float x, y;
+    public float x;
+    private float y;
     private int width, height;
     private Bitmap image;
     private boolean isAlive;

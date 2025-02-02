@@ -16,7 +16,7 @@ public class Player {
     private float speed = 10f;
     private boolean movingLeft, movingRight, jumping;
     private boolean isIdle;
-    private float jumpSpeed = 100;
+    private float jumpSpeed = 10;
     public Bitmap bodyImage;
     public Bitmap headImage;
     public Bitmap gunImage;
@@ -30,16 +30,16 @@ public class Player {
     public int gunWidth = 150;
     public int gunHeight = 90;
 
-    private static final long ANIMATION_DELAY = 300;
+    //    private static final long ANIMATION_DELAY = 300;
     private List<Block> blocks;
     public float LandRestriction = 500;
     public static List<Bullet> bullets;
 
     public static boolean isFacingLeft;
 
-    private float initialJumpSpeed = -10f;
-    private float gravity = 1.2f;
-    private float maxJumpHeight = 5f;
+    private float initialJumpSpeed = -9.5f;//
+    private float gravity = 0.38f;
+    private float maxJumpHeight = 4.75f;//max Jump height
 
     private float currentJumpHeight = 0f;
     private Animation animation;
@@ -118,63 +118,32 @@ public class Player {
         return groundCondition || blockCondition;
     }
 
-//    public boolean checkBlockCollision(List<Block> blocks) {
-//        boolean isColliding = false;
-//        LandRestriction = Player.y - Player.height;
-//
-//        for (Block block : blocks) {
-//            boolean xOverlap = (x < block.getX() + block.getWidth()) &&
-//                    (x + width > block.getX());
-//
-//            boolean yOverlap = (y + height >= block.getY()) &&
-//                    (y + height <= block.getY() + block.getHeight());
-//
-//            Log.i("BlockCollision",
-//                    "Block: " + block.getX() + "," + block.getY() +
-//                            " | Player: " + x + "," + y +
-//                            " | Overlap: " + xOverlap + "," + yOverlap
-//            );
-//
-//            if (xOverlap && yOverlap) {
-//                isColliding = true;
-//
-//                if (y + height <= block.getY() + block.getHeight() && jumpSpeed >= 0) {
-//                    y = block.getY() - height;
-//                    LandRestriction = (int) block.getY();
-//                    jumpSpeed = 0;
-//                }
-//            }
-//        }
-//
-//        return isColliding;
-//    }
-public boolean checkBlockCollision(List<Block> blocks) {
-    boolean isColliding = false;
-    LandRestriction = Player.y - Player.height;
+    public boolean checkBlockCollision(List<Block> blocks) {
+        boolean isColliding = false;
+        LandRestriction = Player.y - Player.height;
 
-    for (Block block : blocks) {
-        // Проверяем только блоки, которые находятся рядом с игроком
-        if (Math.abs(block.getX() - x) < 200 && Math.abs(block.getY() - y) < 200) {
-            boolean xOverlap = (x < block.getX() + block.getWidth()) &&
-                    (x + width > block.getX());
+        for (Block block : blocks) {
+            if (Math.abs(block.getX() - x) < 200 && Math.abs(block.getY() - y) < 200) {
+                boolean xOverlap = (x < block.getX() + block.getWidth()) &&
+                        (x + width > block.getX());
 
-            boolean yOverlap = (y + height >= block.getY()) &&
-                    (y + height <= block.getY() + block.getHeight());
+                boolean yOverlap = (y + height >= block.getY()) &&
+                        (y + height <= block.getY() + block.getHeight());
 
-            if (xOverlap && yOverlap) {
-                isColliding = true;
+                if (xOverlap && yOverlap) {
+                    isColliding = true;
 
-                if (y + height <= block.getY() + block.getHeight() && jumpSpeed >= 0) {
-                    y = block.getY() - height;
-                    LandRestriction = (int) block.getY();
-                    jumpSpeed = 0;
+                    if (y + height <= block.getY() + block.getHeight() && jumpSpeed >= 0) {
+                        y = block.getY() - height;
+                        LandRestriction = (int) block.getY();
+                        jumpSpeed = 0;
+                    }
                 }
             }
         }
-    }
 
-    return isColliding;
-}
+        return isColliding;
+    }
 
 
 
@@ -219,7 +188,7 @@ public boolean checkBlockCollision(List<Block> blocks) {
     }
 
     public void setBlocks(List<Block> blockList) {
-
+        this.blocks = blockList;
     }
 
     public float getX() {
@@ -248,4 +217,18 @@ public boolean checkBlockCollision(List<Block> blocks) {
         this.gunImage = Bitmap.createScaledBitmap(gunImage, gunWidth, gunHeight, false);
     }
 
+
+    public void setX(float newX) {
+        x = newX;
+    }
+
+    public int getVelocityX() {
+        if (movingLeft) {
+            return (int) -speed;
+        } else if (movingRight) {
+            return (int) speed;
+        } else {
+            return 0;
+        }
+    }
 }

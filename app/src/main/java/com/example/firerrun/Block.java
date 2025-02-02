@@ -7,7 +7,7 @@ import android.content.Context;
 import android.graphics.Rect;
 
 public class Block {
-    private float x, y;
+    public float x, y;
     private int width, height;
     private Bitmap image;
     private Context context;
@@ -30,6 +30,10 @@ public class Block {
             canvas.drawRect(x, y, x + width, y + height, null);
         }
     }
+    public void update() {
+
+    }
+
     public float getX() {
         return x;
     }
