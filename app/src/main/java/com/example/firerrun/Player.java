@@ -37,19 +37,18 @@ public class Player {
 
     public static boolean isFacingLeft;
 
-    private float initialJumpSpeed = -9.5f;//
+    private float initialJumpSpeed = -9.5f;
     private float gravity = 0.38f;
     private float maxJumpHeight = 4.75f;//max Jump height
 
     private float currentJumpHeight = 0f;
     private Animation animation;
-
     public Player(Context context) {
         this.context = context;
         this.x = 100;
         this.y = 100;
 
-        bodyImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.person_walk_1);
+        bodyImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.person_stop1);
         bodyImage = Bitmap.createScaledBitmap(bodyImage, width, height, false);
 
         headImage = BitmapFactory.decodeResource(context.getResources(), R.drawable.person_head);

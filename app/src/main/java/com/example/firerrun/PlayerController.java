@@ -5,6 +5,8 @@ import android.util.Log;
 public class PlayerController {
     private Player player;
     private GameView gameView;
+    private long lastJumpTime = 0;
+    private final long JUMP_COOLDOWN = 2000;
 
     public PlayerController(Player player, GameView gameView) {
         this.player = player;
@@ -18,28 +20,28 @@ public class PlayerController {
     public void moveLeft() {
         player.setMovingLeft(true);
         player.setMovingRight(false);
-        Log.i("PlayerController", "Moving left");
     }
 
     public void stopLeft() {
         player.setMovingLeft(false);
-        Log.i("PlayerController", "Stopped moving left");
     }
 
     public void moveRight() {
         player.setMovingRight(true);
         player.setMovingLeft(false);
-        Log.i("PlayerController", "Moving right");
     }
 
     public void stopRight() {
         player.setMovingRight(false);
-        Log.i("PlayerController", "Stopped moving right");
     }
 
     public void jump() {
+        long currentTime = System.currentTimeMillis();
 
-        player.jump();
-        Log.i("PlayerController", "Jumping");
+        if (currentTime - lastJumpTime >= JUMP_COOLDOWN) {
+            player.jump();
+            lastJumpTime = currentTime;
+        } else {
+        }
     }
 }

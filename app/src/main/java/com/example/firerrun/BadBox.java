@@ -8,19 +8,20 @@ import android.graphics.Rect;
 public class BadBox {
     public float x;
     private float y;
-    private int width, height;
+    private float width;
+    private float height;
     private Bitmap image;
     private boolean isAlive;
 
-    public BadBox(float x, float y, Bitmap image) {
+    public BadBox(float x, float y, float width, float height, Bitmap image) {
         this.x = x;
         this.y = y;
         this.image = image;
-        this.width = 150;
-        this.height = 150;
+        this.width = width;
+        this.height = height;
         this.isAlive = true;
 
-        this.image = Bitmap.createScaledBitmap(image, width, height, false);
+        this.image = Bitmap.createScaledBitmap(image, (int) width, (int) height, false);
     }
 
     public void draw(Canvas canvas) {

@@ -35,12 +35,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private List<Block> blockList = new ArrayList<>();
     private List<Bullet> bullets = new ArrayList<>();
+    private List<BadBox> badBoxList = new ArrayList<>();
 
     public GameView(Context context, AttributeSet attrs) {
         super(context, attrs);
         getHolder().addCallback(this);
-
-        Log.i("BlockListSIZE", String.valueOf(BlocksList.Blocks.length));
 
         for (int[] blockData : BlocksList.Blocks) {
             Block block;
@@ -55,6 +54,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             block = new Block(context, blockData[0], blockData[1], blockData[2], blockData[3], BlockID);
             blockList.add(block);
         }
+
+        for (int[] badBoxData : BadBoxList.BadBoxs) {
+            BadBox badBox = new BadBox(badBoxData[0], badBoxData[1], badBoxData[2], badBoxData[3],
+                    BitmapFactory.decodeResource(context.getResources(), R.drawable.bad_box));
+            badBoxList.add(badBox);
+        }
+
         player = new Player(context);
         player.setBlocks(blockList);
 
@@ -67,10 +73,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         textPaint.setColor(Color.RED);
         textPaint.setTextSize(100);
         textPaint.setTextAlign(Paint.Align.CENTER);
-        badBox = new BadBox(500, 500, BitmapFactory.decodeResource(context.getResources(), R.drawable.bad_box));
 
         playerController = new PlayerController(player, this);
-
         switchCader = new SwitchCader(player, this);
     }
 
@@ -131,9 +135,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
                 continue;
             }
 
-            if (badBox.checkCollisionBullet(bullet)) {
-                bullets.remove(i);
-                badBox.die();
+            for (BadBox badBox : badBoxList) {
+                if (badBox.checkCollisionBullet(bullet)) {
+                    bullets.remove(i);
+                    badBox.die();
+                    break;
+                }
             }
 
             for (Block block : blockList) {
@@ -147,12 +154,14 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
             }
         }
 
-        if (badBox.checkCollisionPlayer(player)) {
-            long currentTime = System.currentTimeMillis();
-            if (currentTime - lastCollisionTime >= collisionCooldown) {
-                lastCollisionTime = currentTime;
-                life.decreaseLife(20);
-                Log.i("info", "Player collided with badBox and lost life");
+        for (BadBox badBox : badBoxList) {
+            if (badBox.checkCollisionPlayer(player)) {
+                long currentTime = System.currentTimeMillis();
+                if (currentTime - lastCollisionTime >= collisionCooldown) {
+                    lastCollisionTime = currentTime;
+                    life.decreaseLife(20);
+                    Log.i("info", "Player collided with badBox and lost life");
+                }
             }
         }
 
@@ -169,12 +178,13 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         player.update();
-        badBox.update();
+        for (BadBox badBox : badBoxList) {
+            badBox.update();
+        }
     }
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-
 
         if (background != null) {
             canvas.drawBitmap(background, 0, 0, null);
@@ -186,7 +196,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         player.draw(canvas);
-        badBox.draw(canvas);
+        for (BadBox badBox : badBoxList) {
+            badBox.draw(canvas);
+        }
         life.draw(canvas);
 
         for (Block block : blockList) {
@@ -200,6 +212,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
     public List<Block> getBlockList() {
         return blockList;
+    }
+    public List<BadBox> getBadBoxList(){
+        return badBoxList;
+
     }
 
     public List<Bullet> getBullets() {
