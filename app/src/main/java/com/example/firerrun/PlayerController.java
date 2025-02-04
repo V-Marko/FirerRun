@@ -6,7 +6,7 @@ public class PlayerController {
     private Player player;
     private GameView gameView;
     private long lastJumpTime = 0;
-    private final long JUMP_COOLDOWN = 2000;
+    private final long JUMP_COOLDOWN = 1000;
 
     public PlayerController(Player player, GameView gameView) {
         this.player = player;
@@ -18,10 +18,11 @@ public class PlayerController {
     }
 
     public void moveLeft() {
+
         player.setMovingLeft(true);
         player.setMovingRight(false);
     }
-
+    //исправление бага в Jump
     public void stopLeft() {
         player.setMovingLeft(false);
     }
@@ -42,6 +43,7 @@ public class PlayerController {
             player.jump();
             lastJumpTime = currentTime;
         } else {
+
         }
     }
 }
